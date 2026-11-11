@@ -1,6 +1,8 @@
 runConfig:
   minInstances: 0
   maxInstances: 1
+  # A web search by Gemini can take up to a minute or so.
+  timeoutSeconds: 120
 # Checks use the GEMINI_API_KEY secret, limited to 200 a day in total and 25 per
 # visitor (DAILY_CHECKS, DAILY_CHECKS_PER_VISITOR to change).
 

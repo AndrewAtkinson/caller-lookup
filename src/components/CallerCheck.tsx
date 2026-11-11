@@ -91,7 +91,14 @@ export default function CallerCheck() {
           headers: { "Content-Type": "application/json", ...(key ? { "x-gemini-key": key } : {}) },
           body: JSON.stringify({ number: raw, fresh }),
         });
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
+        if (!data) {
+          throw new Error(
+            response.status === 504 || response.status === 408
+              ? "The search took too long. Try again in a minute."
+              : `The server had a problem (error ${response.status}). Try again in a minute.`,
+          );
+        }
         if (!response.ok) throw new Error(data.error || "Something went wrong.");
         const result = data as Lookup;
         const current = read<Saved[]>(HISTORY_STORE, []);
@@ -167,9 +174,10 @@ export default function CallerCheck() {
       <Result
         saved={pending ? undefined : saved}
         pending={pending}
+        failed={!pending && !saved ? parseNumber(view.key) : null}
         error={error}
         onBack={goHome}
-        onAgain={() => void check(saved?.number.display ?? pending?.display ?? "", true)}
+        onAgain={() => void check(saved?.number.display ?? pending?.display ?? view.key, true)}
         onMark={(m) => saved && setMark(saved.number.key, m)}
         onRemove={() => saved && remove(saved.number.key)}
       />
@@ -235,6 +243,7 @@ export default function CallerCheck() {
 function Result({
   saved,
   pending,
+  failed,
   error,
   onBack,
   onAgain,
@@ -243,13 +252,14 @@ function Result({
 }: {
   saved?: Saved;
   pending: ParsedNumber | null;
+  failed: ParsedNumber | null;
   error: string;
   onBack: () => void;
   onAgain: () => void;
   onMark: (m: Mark) => void;
   onRemove: () => void;
 }) {
-  const number = saved?.number ?? pending;
+  const number = saved?.number ?? pending ?? failed;
   const [step, setStep] = useState(0);
   useEffect(() => {
     if (!pending) return;
