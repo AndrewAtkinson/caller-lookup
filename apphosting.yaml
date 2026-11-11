@@ -1,0 +1,11 @@
+runConfig:
+  minInstances: 0
+  maxInstances: 1
+# No secrets needed: the Gemini key is pasted into Settings in the app and kept
+# on that device. Each check sends it to /api/lookup, which passes it to Gemini.
+
+env:
+  # PostHog (usage + error tracking, EU). The project key is public by design:
+  # it can only send events. Needed at build time for the browser code.
+  - variable: NEXT_PUBLIC_POSTHOG_KEY
+    value: phc_ug5tqMV47bHgaPeERcb8sFcqeNd5ReCRPJtnjqm3TDTg
