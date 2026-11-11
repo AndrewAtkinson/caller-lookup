@@ -83,17 +83,12 @@ export default function CallerCheck() {
         return;
       }
       const key = read<string>(KEY_STORE, "");
-      if (!key) {
-        setError("Add your Gemini key in Settings first.");
-        setView({ name: "settings" });
-        return;
-      }
       setPending(number);
       setView({ name: "result", key: number.key });
       try {
         const response = await fetch("/api/lookup", {
           method: "POST",
-          headers: { "Content-Type": "application/json", "x-gemini-key": key },
+          headers: { "Content-Type": "application/json", ...(key ? { "x-gemini-key": key } : {}) },
           body: JSON.stringify({ number: raw, fresh }),
         });
         const data = await response.json();
@@ -202,13 +197,6 @@ export default function CallerCheck() {
         <input id="number" inputMode="tel" autoComplete="off" placeholder="07… or +44…" value={input} onChange={(e) => setInput(e.target.value)} />
         <button className="btn primary big" type="submit">Check</button>
       </form>
-      {ready && !apiKey && (
-        <div className="card">
-          <div className="label">One-time setup</div>
-          <p className="body">Caller Check uses your own free Gemini key to search the web. It stays on this phone.</p>
-          <button className="btn primary" onClick={() => setView({ name: "settings" })}>Add Gemini key</button>
-        </div>
-      )}
       {error && <div className="card error" role="alert">{error}</div>}
       {history.length > 0 && (
         <>
@@ -238,7 +226,7 @@ export default function CallerCheck() {
           </div>
         </>
       )}
-      {ready && history.length === 0 && apiKey && <div className="empty">Numbers you check show up here, so you can spot repeat callers.</div>}
+      {ready && history.length === 0 && <div className="empty">Numbers you check show up here, so you can spot repeat callers.</div>}
       <p className="foot">Only public business listings and spam reports are searched. Results can be wrong; if in doubt, don&apos;t ring back and contact the organisation on a number you trust.</p>
     </main>
   );
@@ -418,9 +406,9 @@ function Settings({ apiKey, onSave, onBack, onClear, count }: { apiKey: string; 
         <div className="grow kicker mono">SETTINGS</div>
       </div>
       <div className="card">
-        <div className="label">Gemini key</div>
+        <div className="label">Your own Gemini key (optional)</div>
         <p className="body">
-          Get a free key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>, then paste it here. It&apos;s kept on this device and only sent to Gemini when you check a number.
+          Checks use the app&apos;s own key, which has a daily limit. If you hit it, get a free key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>, then paste it here. It&apos;s kept on this device and only sent to Gemini when you check a number.
         </p>
         <div className="field">
           <label htmlFor="key" className="sr">Gemini key</label>
