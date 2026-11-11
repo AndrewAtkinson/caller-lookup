@@ -4,7 +4,7 @@ import { lookupPrompt, parseLookup, sourcesFrom, type Lookup } from "@/lib/verdi
 import { track } from "@/lib/track";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 // Gemini with Google Search grounding researches the number. Checks use the app's
 // own key (GEMINI_API_KEY secret), with daily limits so a public site can't run up
@@ -50,8 +50,13 @@ export async function POST(request: Request) {
     if (refused) return NextResponse.json({ error: refused }, { status: 429 });
   }
 
-  let lastError = "Couldn't reach Gemini. Try again in a minute.";
+  // Searching can take a while. Stop before App Hosting's 120s request limit
+  // (apphosting.yaml timeoutSeconds) so the person gets a proper message.
+  const deadline = Date.now() + 100_000;
+  let lastError = "The search took too long. Try again in a minute.";
   for (const model of MODELS) {
+    const left = deadline - Date.now();
+    if (left < 15_000) break;
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
@@ -60,7 +65,7 @@ export async function POST(request: Request) {
         tools: [{ google_search: {} }],
         generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
       }),
-      signal: AbortSignal.timeout(50_000),
+      signal: AbortSignal.timeout(Math.min(left, 75_000)),
     }).catch(() => null);
     if (!response) continue;
     const data = (await response.json().catch(() => ({}))) as GeminiResponse;
