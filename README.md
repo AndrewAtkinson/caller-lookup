@@ -9,7 +9,7 @@ Look up a UK phone number and see whether it's a scam, a nuisance caller or a ge
 
 ## Setup
 
-The Gemini key is pasted into **Settings** in the app and kept on that device. No secrets are needed on the server.
+Checks use the `GEMINI_API_KEY` secret (shared with Smart Invoicer), limited to 200 a day and 25 per visitor. Anyone can paste their own Gemini key in **Settings** (kept on their device) to skip the limits.
 
 Hosting: Firebase App Hosting from `main` (`apphosting.yaml`). PostHog tracking tags events with `app: caller-lookup`.
 

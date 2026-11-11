@@ -1,11 +1,16 @@
 runConfig:
   minInstances: 0
   maxInstances: 1
-# No secrets needed: the Gemini key is pasted into Settings in the app and kept
-# on that device. Each check sends it to /api/lookup, which passes it to Gemini.
+# Checks use the GEMINI_API_KEY secret, limited to 200 a day in total and 25 per
+# visitor (DAILY_CHECKS, DAILY_CHECKS_PER_VISITOR to change).
 
 env:
   # PostHog (usage + error tracking, EU). The project key is public by design:
   # it can only send events. Needed at build time for the browser code.
   - variable: NEXT_PUBLIC_POSTHOG_KEY
     value: phc_ug5tqMV47bHgaPeERcb8sFcqeNd5ReCRPJtnjqm3TDTg
+
+  # The app's Gemini key, shared with Smart Invoicer (same Firebase project).
+  # People can still paste their own key in Settings, which skips the daily limits.
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
